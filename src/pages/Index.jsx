@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -10,11 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-const Index = () => {
+const Index = ({ editTransaction }) => {
   const [transactions, setTransactions] = useState([
     { id: 1, date: "2023-10-01", amount: 200, type: "Income", brand: "Nike" },
     { id: 2, date: "2023-10-02", amount: 150, type: "Expense", brand: "Adidas" },
@@ -27,7 +25,11 @@ const Index = () => {
     brand: "Nike",
   });
 
-  const [editTransaction, setEditTransaction] = useState(null);
+  useEffect(() => {
+    if (editTransaction) {
+      setNewTransaction(editTransaction);
+    }
+  }, [editTransaction]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,31 +45,21 @@ const Index = () => {
     toast("Transaction added successfully.");
   };
 
-  const handleEditTransaction = (id) => {
-    const transaction = transactions.find((t) => t.id === id);
-    setEditTransaction(transaction);
-  };
-
   const handleUpdateTransaction = () => {
     setTransactions(
       transactions.map((t) =>
-        t.id === editTransaction.id ? editTransaction : t
+        t.id === newTransaction.id ? newTransaction : t
       )
     );
-    setEditTransaction(null);
+    setNewTransaction({ date: "", amount: "", type: "Income", brand: "Nike" });
     toast("Transaction updated successfully.");
-  };
-
-  const handleDeleteTransaction = (id) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
-    toast("Transaction deleted successfully.");
   };
 
   return (
     <div className="p-4">
       <Card>
         <CardHeader>
-          <CardTitle>Add New Transaction</CardTitle>
+          <CardTitle>{editTransaction ? "Edit Transaction" : "Add New Transaction"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -129,135 +121,13 @@ const Index = () => {
           </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleAddTransaction}>Add Transaction</Button>
+          {editTransaction ? (
+            <Button onClick={handleUpdateTransaction}>Update Transaction</Button>
+          ) : (
+            <Button onClick={handleAddTransaction}>Add Transaction</Button>
+          )}
         </CardFooter>
       </Card>
-
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Transaction List</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Brand</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>{transaction.date}</TableCell>
-                    <TableCell>{transaction.amount}</TableCell>
-                    <TableCell>{transaction.type}</TableCell>
-                    <TableCell>{transaction.brand}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleEditTransaction(transaction.id)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => handleDeleteTransaction(transaction.id)}
-                        className="ml-2"
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-
-      {editTransaction && (
-        <Dialog open={true} onOpenChange={() => setEditTransaction(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Transaction</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="edit-date">Date</Label>
-                <Input
-                  type="date"
-                  id="edit-date"
-                  name="date"
-                  value={editTransaction.date}
-                  onChange={(e) =>
-                    setEditTransaction({
-                      ...editTransaction,
-                      date: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-amount">Amount</Label>
-                <Input
-                  type="number"
-                  id="edit-amount"
-                  name="amount"
-                  value={editTransaction.amount}
-                  onChange={(e) =>
-                    setEditTransaction({
-                      ...editTransaction,
-                      amount: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-type">Type</Label>
-                <Select
-                  value={editTransaction.type}
-                  onValueChange={(value) =>
-                    setEditTransaction({ ...editTransaction, type: value })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Income">Income</SelectItem>
-                    <SelectItem value="Expense">Expense</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="edit-brand">Brand</Label>
-                <Select
-                  value={editTransaction.brand}
-                  onValueChange={(value) =>
-                    setEditTransaction({ ...editTransaction, brand: value })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select brand" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Nike">Nike</SelectItem>
-                    <SelectItem value="Adidas">Adidas</SelectItem>
-                    <SelectItem value="Puma">Puma</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="mt-4">
-              <Button onClick={handleUpdateTransaction}>Update Transaction</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 };
